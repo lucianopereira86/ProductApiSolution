@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic;
@@ -237,6 +238,46 @@ namespace ProductApi.Tests.Integration
                 Assert.Equal(product.CreatedBy, persistedProduct.CreatedBy);
                 Assert.False(originalRowVersion.SequenceEqual(persistedProduct.RowVersion));
             }
+        }
+
+        [Fact]
+        public async Task UpdateProduct_WhenProductDoesNotExist_ShouldReturn404()
+        {
+            // Arrange
+            string token;
+            int nonExistingProductId;
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                nonExistingProductId = dbContext.Products.Max(m => m.Id) + 1;
+
+                var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+                token = tokenService.GenerateToken(
+                    userId: "user-123",
+                    username: "integration-test",
+                    role: "editor",
+                    permissions: ["Products.Read", "Products.Write"]);
+            }
+
+            var updateProductRequest = new UpdateProductRequest(
+                nonExistingProductId,
+                "original product",
+                100,
+                10,
+                "updated product",
+                Convert.ToBase64String(new byte[8]));
+
+            var httpContent = JsonContent.Create(updateProductRequest);
+            string endpoint = $"/mediator/products/{nonExistingProductId}";
+            using var request = new HttpRequestMessage(HttpMethod.Put, endpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = httpContent;
+            // Act
+            using var response = await _client.SendAsync(request);
+
+            // Assert
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
     }
 }
