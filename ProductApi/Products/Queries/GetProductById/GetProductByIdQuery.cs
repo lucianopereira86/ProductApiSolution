@@ -1,0 +1,1 @@
+public record GetProductByIdQuery(int Id):IRequest<Product?>;

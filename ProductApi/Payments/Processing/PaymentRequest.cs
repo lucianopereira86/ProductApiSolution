@@ -1,0 +1,1 @@
+public record PaymentRequest(decimal Amount, PaymentMethod Method);
