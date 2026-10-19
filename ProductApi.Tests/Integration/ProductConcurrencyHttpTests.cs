@@ -454,7 +454,7 @@ namespace ProductApi.Tests.Integration
                 -1,
                 10,
                 "updated product",
-                RowVersion: Convert.ToBase64String(new byte[8]));
+                RowVersion: Convert.ToBase64String(originalProduct.RowVersion));
 
             var httpContent = JsonContent.Create(updateProductRequest);
             string endpoint = $"/mediator/products/{originalProduct.Id}";
@@ -471,6 +471,63 @@ namespace ProductApi.Tests.Integration
             Assert.NotNull(problem);
             Assert.Equal(StatusCodes.Status400BadRequest, problem.Status);
             Assert.Contains("Price must be greater than zero.", problem.Detail);
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var persistedProduct = await dbContext.Products.SingleAsync(s => s.Id == originalProduct.Id);
+                Assert.Equal(originalProduct.Name, persistedProduct.Name);
+                Assert.Equal(originalProduct.Price, persistedProduct.Price);
+                Assert.Equal(originalProduct.Stock, persistedProduct.Stock);
+                Assert.Equal(originalProduct.Description, persistedProduct.Description);
+                Assert.True(originalProduct.RowVersion.SequenceEqual(persistedProduct.RowVersion));
+            }
+        }
+
+        [Fact]
+        public async Task UpdateProduct_WithNegativeStock_ShouldReturn400()
+        {
+            // Arrange
+            string token;
+            var originalProduct = new Product("user-123", "product 1", 10, 1);
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                dbContext.Products.Add(originalProduct);
+                await dbContext.SaveChangesAsync();
+
+                var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+                token = tokenService.GenerateToken(
+                    userId: "user-123",
+                    username: "integration-test",
+                    role: "editor",
+                    permissions: ["Products.Read", "Products.Write"]);
+            }
+
+            var updateProductRequest = new UpdateProductRequest(
+                originalProduct.Id,
+                "original product",
+                1,
+                -1,
+                "updated product",
+                RowVersion: Convert.ToBase64String(originalProduct.RowVersion));
+
+            var httpContent = JsonContent.Create(updateProductRequest);
+            string endpoint = $"/mediator/products/{originalProduct.Id}";
+            using var request = new HttpRequestMessage(HttpMethod.Put, endpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = httpContent;
+
+            // Act
+            using var response = await _client.SendAsync(request);
+
+            // Assert
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+            Assert.NotNull(problem);
+            Assert.Equal(StatusCodes.Status400BadRequest, problem.Status);
+            Assert.Contains("Stock must not be negative.", problem.Detail);
 
             using (var scope = _factory.Services.CreateScope())
             {
