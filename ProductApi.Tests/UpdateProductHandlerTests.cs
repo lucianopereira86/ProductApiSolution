@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.VisualBasic;
 using Moq;
+using System.Collections;
 using System.Security.Claims;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -142,5 +143,64 @@ public class UpdateProductHandlerTests
         authorizationServiceMock.Verify(v => v.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), "Products.Owner"), Times.Never);
         productRepositoryMock.Verify(r => r.SetOriginalRowVersion(It.IsAny<Product>(), It.IsAny<byte[]>()), Times.Never);
         unitOfWorkMock.Verify(v => v.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateDetails_WithInvalidStock_ShouldNotModifyProduct()
+    {
+        // Arrange
+        var originalDetails = new
+        {
+            Name = "Original",
+            Price = 10m,
+            Stock = 5,
+            Description = "Original description"
+        };
+        var updatedDetails = new
+        {
+            Name = "Updated",
+            Price = 20m,
+            Stock = -1,
+            Description = "Updated description"
+        };
+        var product = new Product("user-123", originalDetails.Name, originalDetails.Price, originalDetails.Stock, originalDetails.Description);
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => product.UpdateDetails(updatedDetails.Name, updatedDetails.Price, updatedDetails.Stock, updatedDetails.Description));
+        Assert.Contains("Stock must not be negative.", exception.Message);
+        Assert.Equal(originalDetails.Name, product.Name);
+        Assert.Equal(originalDetails.Price, product.Price);
+        Assert.Equal(originalDetails.Stock, product.Stock);
+        Assert.Equal(originalDetails.Description, product.Description);
+    }
+
+    [Fact]
+    public void UpdateDetails_WithValidData_ShouldUpdateAllProperties()
+    {
+        // Arrange
+        var originalDetails = new
+        {
+            Name = "Original",
+            Price = 10m,
+            Stock = 5,
+            Description = "Original description"
+        };
+        var updatedDetails = new
+        {
+            Name = "Updated",
+            Price = 20m,
+            Stock = 1,
+            Description = "Updated description"
+        };
+        var product = new Product("user-123", originalDetails.Name, originalDetails.Price, originalDetails.Stock, originalDetails.Description);
+
+        // Act
+        product.UpdateDetails(updatedDetails.Name, updatedDetails.Price, updatedDetails.Stock, updatedDetails.Description);
+
+        // Assert
+        Assert.Equal(updatedDetails.Name, product.Name);
+        Assert.Equal(updatedDetails.Price, product.Price);
+        Assert.Equal(updatedDetails.Stock, product.Stock);
+        Assert.Equal(updatedDetails.Description, product.Description);
     }
 }

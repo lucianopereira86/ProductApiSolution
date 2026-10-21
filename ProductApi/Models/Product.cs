@@ -94,4 +94,19 @@ public class Product : IEquatable<Product>
     {
         Description = description;
     }
+
+    public void UpdateDetails(string name, decimal price, int stock, string? description)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name is required", nameof(name));
+        if (price <= 0)
+            throw new ArgumentOutOfRangeException(nameof(price), price, $"Price must be greater than zero.");
+        if (stock < 0)
+            throw new ArgumentOutOfRangeException(nameof(stock), stock, $"Stock must not be negative.");
+
+        Name = name;
+        Price = price;
+        Stock = stock;
+        Description = description;
+    }
 }
