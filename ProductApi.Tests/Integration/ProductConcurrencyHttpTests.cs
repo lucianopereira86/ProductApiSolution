@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Castle.Components.DictionaryAdapter.Xml;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -467,10 +468,10 @@ namespace ProductApi.Tests.Integration
 
             // Assert
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+            var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
             Assert.NotNull(problem);
             Assert.Equal(StatusCodes.Status400BadRequest, problem.Status);
-            Assert.Contains("Price must be greater than zero.", problem.Detail);
+            Assert.True(problem.Errors.ContainsKey("Price"));
 
             using (var scope = _factory.Services.CreateScope())
             {
@@ -524,10 +525,10 @@ namespace ProductApi.Tests.Integration
 
             // Assert
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+            var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
             Assert.NotNull(problem);
             Assert.Equal(StatusCodes.Status400BadRequest, problem.Status);
-            Assert.Contains("Stock must not be negative.", problem.Detail);
+            Assert.True(problem.Errors.ContainsKey("Stock"));
 
             using (var scope = _factory.Services.CreateScope())
             {
