@@ -20,7 +20,7 @@ public class UpdateProductCommandTests
         };
 
         var validator = new UpdateProductCommandValidator();
-        
+
         // Act
         var results = validator.Validate(new UpdateProductCommand(
             updatedDetails.Id,
@@ -33,7 +33,7 @@ public class UpdateProductCommandTests
         // Assert
         Assert.False(results.IsValid);
         Assert.Single(results.Errors);
-        Assert.Equal(nameof(Product.Name), results.Errors.First().PropertyName);
+        Assert.Contains(results.Errors, error => error.PropertyName == nameof(UpdateProductCommand.Name));
     }
 
 
@@ -67,7 +67,7 @@ public class UpdateProductCommandTests
         // Assert
         Assert.False(results.IsValid);
         Assert.Single(results.Errors);
-        Assert.Equal(nameof(Product.Price), results.Errors.First().PropertyName);
+        Assert.Contains(results.Errors, error => error.PropertyName == nameof(UpdateProductCommand.Price));
     }
 
 
@@ -100,7 +100,7 @@ public class UpdateProductCommandTests
         // Assert
         Assert.False(results.IsValid);
         Assert.Single(results.Errors);
-        Assert.Equal(nameof(Product.Stock), results.Errors.First().PropertyName);
+        Assert.Contains(results.Errors, error => error.PropertyName == nameof(UpdateProductCommand.Stock));
     }
 
 
@@ -112,7 +112,7 @@ public class UpdateProductCommandTests
         {
             Id = 1,
             Name = string.Empty,
-            Price=  0,
+            Price = 0,
             Stock = -1,
             Description = "Updated description",
             RowVersion = Convert.ToBase64String(new byte[8])
@@ -132,9 +132,9 @@ public class UpdateProductCommandTests
         // Assert
         Assert.False(results.IsValid);
         Assert.Equal(3, results.Errors.Count);
-        Assert.NotNull(results.Errors.FirstOrDefault(s => s.PropertyName == nameof(Product.Name)));
-        Assert.NotNull(results.Errors.FirstOrDefault(s => s.PropertyName == nameof(Product.Price)));
-        Assert.NotNull(results.Errors.FirstOrDefault(s => s.PropertyName == nameof(Product.Stock)));
+        Assert.Contains(results.Errors, error => error.PropertyName == nameof(UpdateProductCommand.Name));
+        Assert.Contains(results.Errors, error => error.PropertyName == nameof(UpdateProductCommand.Price));
+        Assert.Contains(results.Errors, error => error.PropertyName == nameof(UpdateProductCommand.Stock));
     }
 
 

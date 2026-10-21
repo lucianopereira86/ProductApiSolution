@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using FluentValidation;
+using ProductApi.Products.Commands.UpdateProduct;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -116,6 +118,8 @@ builder.Services.AddScoped<IPaymentHandler>(sp =>
 });
 
 builder.Services.AddScoped<IMediator, Mediator>();
+builder.Services.AddScoped<IValidator<UpdateProductCommand>, UpdateProductCommandValidator>();
+
 builder.Services.AddScoped<IRequestHandler<CreateProductCommand, int>, CreateProductHandler>();
 builder.Services.AddScoped<IRequestHandler<UpdateProductCommand, bool>, UpdateProductHandler>();
 builder.Services.AddScoped<IRequestHandler<GetProductByIdQuery, Product?>, GetProductByIdHandler>();
