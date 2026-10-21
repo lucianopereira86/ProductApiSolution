@@ -28,10 +28,7 @@ public class UpdateProductHandler(IAuthorizationService authorizationService, IC
 
         _productRepository.SetOriginalRowVersion(product, originalRowVersion);
 
-        product.ChangeName(command.Name);
-        product.ChangePrice(command.Price);
-        product.SetStock(command.Stock);
-        product.ChangeDescription(command.Description);
+        product.UpdateDetails(command.Name, command.Price, command.Stock, command.Description);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
