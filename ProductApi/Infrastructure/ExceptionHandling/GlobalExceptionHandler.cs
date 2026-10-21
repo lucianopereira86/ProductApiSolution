@@ -32,10 +32,11 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
                 validationException.Errors.Count());
 
             httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-            httpContext.Response.ContentType = "application/problem+json";
 
             await httpContext.Response.WriteAsJsonAsync(
                 problemDetails,
+                options: null, 
+                contentType: "application/problem+json",
                 cancellationToken);
         }
         else {
