@@ -18,7 +18,7 @@ public class ProductTests
         {
             Name = name,
             Price = 20m,
-            Stock = -1,
+            Stock = 1,
             Description = "Updated description"
         };
         var product = new Product("user-123", originalDetails.Name, originalDetails.Price, originalDetails.Stock, originalDetails.Description);

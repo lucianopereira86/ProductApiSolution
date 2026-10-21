@@ -53,7 +53,7 @@ public class Product : IEquatable<Product>
     public void ChangeName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required", nameof(name));
+            throw new ArgumentException("Name is required.", nameof(name));
         Name = name;
     }
 
@@ -98,7 +98,7 @@ public class Product : IEquatable<Product>
     public void UpdateDetails(string name, decimal price, int stock, string? description)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required", nameof(name));
+            throw new ArgumentException("Name is required.", nameof(name));
         if (price <= 0)
             throw new ArgumentOutOfRangeException(nameof(price), price, $"Price must be greater than zero.");
         if (stock < 0)
